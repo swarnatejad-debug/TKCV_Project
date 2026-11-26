@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Your result{% endblock %}
+{% block content %}
+<section class="auth" style="max-width:520px;text-align:center">
+  <div class="card">
+    <h2>Exam submitted</h2>
+    <p class="sub">{{ a.name }} · {{ a.usn }} · {{ a.subject_code }}</p>
+    <div class="ring" style="--p:{{ pct }}">
+      <div><span><b>{{ a.score }}</b><span class="sub">out of {{ total }}</span></span></div>
+    </div>
+    <p style="font-size:1.1rem;margin:0 0 18px">{{ pct }}%</p>
+    <div class="stats" style="margin:0 0 22px">
+      <div class="stat"><span class="sub">Correct</span><b>{{ right }}</b></div>
+      <div class="stat"><span class="sub">Wrong</span><b>{{ wrong }}</b></div>
+      <div class="stat"><span class="sub">Skipped</span><b>{{ skipped }}</b></div>
+    </div>
+    <form method="post" action="{{ url_for('student_finish') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button class="btn" type="submit">Finish</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

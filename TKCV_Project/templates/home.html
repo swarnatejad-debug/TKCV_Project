@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<section class="hero">
+  <div>
+    <h1>Online exams, made simple.</h1>
+    <p class="sub">Create a multiple-choice exam, share a QR code, and see every student's score as soon as they finish.</p>
+    <div class="row" style="margin-top:26px">
+      <a class="btn" href="{{ url_for('student_login') }}">I am a student</a>
+      <a class="btn ghost" href="{{ url_for('admin_login') }}">I am an admin</a>
+    </div>
+  </div>
+  <div class="scene" aria-hidden="true">
+    <div class="cube">
+      <div class="face f1">A</div><div class="face f2">B</div><div class="face f3">C</div>
+      <div class="face f4">D</div><div class="face f5">&#10003;</div><div class="face f6">?</div>
+    </div>
+  </div>
+</section>
+{% endblock %}

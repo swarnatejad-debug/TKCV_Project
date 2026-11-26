@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}{{ exam.subject_code }}{% endblock %}
+{% block content %}
+<div class="row between" style="margin-bottom:22px">
+  <div>
+    <h1 style="font-size:2rem;margin:0">{{ exam.subject_code }} <span class="badge {{ '' if exam.is_active else 'off' }}">{{ 'Open' if exam.is_active else 'Closed' }}</span></h1>
+    <p class="sub" style="margin:4px 0 0">{{ exam.topic }}. {{ exam.num_questions }} questions, {{ exam.num_questions * exam.marks_per_q }} marks, {{ exam.duration_min }} min.</p>
+  </div>
+  <div class="row">
+    <a class="btn small" href="{{ url_for('exam_results', exam_id=exam.id) }}">Results</a>
+    <form method="post" action="{{ url_for('exam_toggle', exam_id=exam.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button class="btn small ghost" type="submit">{{ 'Close exam' if exam.is_active else 'Reopen exam' }}</button></form>
+    <form method="post" action="{{ url_for('exam_delete', exam_id=exam.id) }}" onsubmit="return confirm('Delete this exam and all results?')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button class="btn small danger" type="submit">Delete</button></form>
+  </div>
+</div>
+<div class="card row" style="gap:32px;margin-bottom:26px">
+  <div class="qr" aria-label="QR code for student login">{{ qr|safe }}</div>
+  <div style="flex:1;min-width:240px">
+    <h2>Student QR code</h2>
+    <p class="sub">Students scan this to open the login page with the subject code filled in.</p>
+    <code>{{ link }}</code>
+  </div>
+</div>
+{% if locked %}
+  <p class="sub">Students have joined, so questions can no longer be changed.</p>
+{% else %}
+<form class="card stack" method="post" action="{{ url_for('question_add', exam_id=exam.id) }}" style="margin-bottom:26px">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <h2>Add a question</h2>
+  <label>Question<textarea name="text" rows="2" required maxlength="500"></textarea></label>
+  <div class="two">
+    <label>Option A<input name="a" required maxlength="200"></label>
+    <label>Option B<input name="b" required maxlength="200"></label>
+    <label>Option C<input name="c" required maxlength="200"></label>
+    <label>Option D<input name="d" required maxlength="200"></label>
+  </div>
+  <label>Correct answer
+    <select name="correct" required>
+      <option value="">Choose</option><option>A</option><option>B</option><option>C</option><option>D</option>
+    </select></label>
+  <button class="btn" type="submit">Add question</button>
+</form>
+{% endif %}
+<h2>Questions ({{ qs|length }})</h2>
+{% if not qs %}<p class="sub">No questions yet. Add the first one above.</p>{% endif %}
+{% for q in qs %}
+<div class="card" style="margin-bottom:14px">
+  <p class="qtext" style="font-size:1.05rem">{{ loop.index }}. {{ q.text }}</p>
+  {% for key, text in [('A', q.opt_a), ('B', q.opt_b), ('C', q.opt_c), ('D', q.opt_d)] %}
+    <div class="qline {{ 'ok' if q.correct == key else '' }}">{{ key }}. {{ text }}{% if q.correct == key %} (correct){% endif %}</div>
+  {% endfor %}
+  {% if not locked %}
+  <form method="post" action="{{ url_for('question_delete', q_id=q.id) }}" style="margin-top:12px" onsubmit="return confirm('Delete this question?')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="linkbtn" type="submit">Delete question</button></form>
+  {% endif %}
+</div>
+{% endfor %}
+{% endblock %}

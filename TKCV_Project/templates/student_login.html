@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Student login{% endblock %}
+{% block content %}
+<section class="auth" style="max-width:520px">
+  <form class="card stack" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <h2>Join an exam</h2>
+    <label>Full name<input name="name" required maxlength="80" value="{{ form.get('name','') }}" autocomplete="name"></label>
+    <div class="two">
+      <label>USN<input name="usn" required maxlength="20" value="{{ form.get('usn','') }}" autocapitalize="characters"></label>
+      <label>Roll number<input name="roll_no" required maxlength="20" value="{{ form.get('roll_no','') }}"></label>
+    </div>
+    <label>Phone number (10 digits)<input name="phone" required inputmode="numeric" pattern="\d{10}" maxlength="10" value="{{ form.get('phone','') }}" autocomplete="tel"></label>
+    <label>Subject code<input name="subject_code" required maxlength="20" value="{{ code }}" autocapitalize="characters"></label>
+    <p class="sub" style="margin:0">The timer starts as soon as you press the button. You can only attempt the exam once.</p>
+    <button class="btn" type="submit">Start exam</button>
+  </form>
+</section>
+{% endblock %}

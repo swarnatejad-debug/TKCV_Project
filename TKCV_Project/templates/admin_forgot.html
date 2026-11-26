@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Forgot password{% endblock %}
+{% block content %}
+<section class="auth">
+  <form class="card stack" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <h2>Forgot password</h2>
+    <p class="sub" style="margin:0">Enter your Gmail and we will send a reset link that works for 30 minutes.</p>
+    <label>Gmail address<input type="email" name="email" required autocomplete="email"></label>
+    <button class="btn" type="submit">Send reset link</button>
+    <p class="sub" style="margin:0"><a href="{{ url_for('admin_login') }}">Back to sign in</a></p>
+  </form>
+</section>
+{% endblock %}

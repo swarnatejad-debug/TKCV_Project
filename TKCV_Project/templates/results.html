@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Results · {{ exam.subject_code }}{% endblock %}
+{% block content %}
+<div class="row between" style="margin-bottom:22px">
+  <div>
+    <h1 style="font-size:2rem;margin:0">Results · {{ exam.subject_code }}</h1>
+    <p class="sub" style="margin:4px 0 0">{{ exam.topic }}. Total marks: {{ total }}</p>
+  </div>
+  <a class="btn small ghost" href="{{ url_for('exam_detail', exam_id=exam.id) }}">Back to exam</a>
+</div>
+
+<div class="stats">
+  <div class="card stat"><span class="sub">Submitted</span><b>{{ stats.done }}</b></div>
+  <div class="card stat"><span class="sub">Started</span><b>{{ stats.started }}</b></div>
+  <div class="card stat"><span class="sub">Average</span><b>{{ stats.avg }}</b></div>
+  <div class="card stat"><span class="sub">Highest</span><b>{{ stats.high }}</b></div>
+</div>
+
+<div class="card" style="margin-bottom:22px">
+  <h2>Score spread</h2>
+  <canvas id="chart" role="img" aria-label="Bar chart of how many students fell in each score range"></canvas>
+</div>
+
+<div class="card">
+  <h2>Students</h2>
+  {% if not rows %}
+    <p class="sub">Nobody has joined this exam yet.</p>
+  {% else %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Name</th><th>USN</th><th>Roll no</th><th>Phone</th><th>Started</th><th>Submitted</th><th>Score</th><th></th></tr></thead>
+      <tbody>
+      {% for r in rows %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ r.name }}</td>
+          <td>{{ r.usn }}</td>
+          <td>{{ r.roll_no }}</td>
+          <td>{{ r.phone }}</td>
+          <td>{{ r.started_at|when }}</td>
+          <td>{{ r.submitted_at|when }}</td>
+          <td>{% if r.submitted_at %}{{ r.score }} / {{ total }}{% else %}<span class="sub">in progress</span>{% endif %}</td>
+          <td>
+            <form method="post" action="{{ url_for('attempt_delete', attempt_id=r.id) }}" onsubmit="return confirm('Remove this attempt? The student can log in again.')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <button class="linkbtn" type="submit">Remove</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+(function () {
+  var labels = {{ labels|tojson }}, counts = {{ counts|tojson }};
+  var cv = document.getElementById('chart');
+  function draw() {
+    var dpr = window.devicePixelRatio || 1;
+    var w = cv.clientWidth, h = cv.clientHeight;
+    cv.width = w * dpr; cv.height = h * dpr;
+    var c = cv.getContext('2d'); c.scale(dpr, dpr); c.clearRect(0, 0, w, h);
+    var css = getComputedStyle(document.documentElement);
+    var mute = css.getPropertyValue('--mute').trim(), violet = css.getPropertyValue('--violet').trim(),
+        cyan = css.getPropertyValue('--cyan').trim(), edge = css.getPropertyValue('--edge').trim();
+    var max = Math.max.apply(null, counts.concat([1]));
+    var top = 24, bottom = 36, left = 34, right = 10;
+    var ph = h - top - bottom, pw = w - left - right, n = counts.length, slot = pw / n, bw = Math.min(70, slot * 0.6);
+    c.font = '13px "DM Sans", sans-serif'; c.textAlign = 'center';
+    c.strokeStyle = edge; c.fillStyle = mute;
+    for (var g = 0; g <= max; g += Math.max(1, Math.ceil(max / 5))) {
+      var y = top + ph - (g / max) * ph;
+      c.beginPath(); c.moveTo(left, y); c.lineTo(w - right, y); c.stroke();
+      c.textAlign = 'right'; c.fillText(g, left - 6, y + 4);
+    }
+    c.textAlign = 'center';
+    counts.forEach(function (v, i) {
+      var x = left + i * slot + (slot - bw) / 2, bh = (v / max) * ph, y = top + ph - bh;
+      var grad = c.createLinearGradient(0, y, 0, y + bh);
+      grad.addColorStop(0, cyan); grad.addColorStop(1, violet);
+      c.fillStyle = grad; c.fillRect(x, y, bw, bh);
+      c.fillStyle = mute; c.fillText(labels[i], x + bw / 2, h - 14);
+      if (v) { c.fillStyle = '#eceefb'; c.fillText(v, x + bw / 2, y - 6); }
+    });
+  }
+  draw(); window.addEventListener('resize', draw);
+})();
+</script>
+{% endblock %}

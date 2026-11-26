@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}My exams{% endblock %}
+{% block content %}
+<div class="row between" style="margin-bottom:22px">
+  <h1 style="font-size:2rem;margin:0">My exams</h1>
+  <a class="btn" href="{{ url_for('exam_new') }}">New exam</a>
+</div>
+{% if not exams %}
+  <div class="card"><p class="sub" style="margin:0">You have no exams yet. Click "New exam" to create your first one.</p></div>
+{% else %}
+<div class="grid">
+  {% for e in exams %}
+  <a class="card tilt" href="{{ url_for('exam_detail', exam_id=e.id) }}" style="text-decoration:none;color:inherit">
+    <div class="row between">
+      <h2 style="margin:0">{{ e.subject_code }}</h2>
+      <span class="badge {{ '' if e.is_active else 'off' }}">{{ 'Open' if e.is_active else 'Closed' }}</span>
+    </div>
+    <p class="sub">{{ e.topic }}</p>
+    <p style="margin:0">{{ e.num_questions }} questions · {{ e.duration_min }} min</p>
+    <p class="sub" style="margin:4px 0 0">{{ e.done }} submitted · created {{ e.created_at|when }}</p>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

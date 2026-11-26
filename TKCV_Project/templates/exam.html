@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}{{ a.subject_code }} exam{% endblock %}
+{% block content %}
+<form id="examform" method="post" action="{{ url_for('student_submit') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <div class="exam-head">
+    <div>
+      <h1 style="font-size:1.7rem;margin:0">{{ a.topic }}</h1>
+      <span class="sub">{{ a.name }} · {{ a.usn }} · {{ a.num_questions }} questions · {{ a.marks_per_q }} mark{{ '' if a.marks_per_q == 1 else 's' }} each</span>
+    </div>
+    <div class="timer" id="timer" role="timer" aria-live="off">--:--</div>
+  </div>
+
+  <div class="exam-grid">
+    <aside class="card" style="padding:0">
+      <ul class="palette" id="palette">
+        {% for q in qs %}<li><button type="button" data-i="{{ loop.index0 }}" aria-label="Go to question {{ loop.index }}">{{ loop.index }}</button></li>{% endfor %}
+      </ul>
+    </aside>
+
+    <section class="card">
+      {% for q in qs %}
+      <fieldset class="q" data-i="{{ loop.index0 }}" {% if not loop.first %}hidden{% endif %}>
+        <legend>Question {{ loop.index }} of {{ qs|length }}</legend>
+        <p class="qtext">{{ q.text }}</p>
+        {% for key, text in q.options %}
+        <label class="opt">
+          <input type="radio" name="q{{ q.id }}" value="{{ key }}">
+          <span class="key">{{ key }}</span><span>{{ text }}</span>
+        </label>
+        {% endfor %}
+        <button class="linkbtn clear" type="button">Clear my answer</button>
+      </fieldset>
+      {% endfor %}
+      <div class="nav-row">
+        <button class="btn ghost" type="button" id="prev">Previous</button>
+        <button class="btn" type="button" id="next">Next</button>
+        <button class="btn danger" type="submit" id="finish" hidden>Submit exam</button>
+      </div>
+    </section>
+  </div>
+</form>
+
+<script>
+(function () {
+  var qs = Array.prototype.slice.call(document.querySelectorAll('fieldset.q'));
+  var btns = Array.prototype.slice.call(document.querySelectorAll('#palette button'));
+  var prev = document.getElementById('prev'), next = document.getElementById('next'), fin = document.getElementById('finish');
+  var form = document.getElementById('examform'), cur = 0, submitting = false;
+
+  function answered(i) { return !!qs[i].querySelector('input:checked'); }
+  function refresh() {
+    qs.forEach(function (f, i) { f.hidden = i !== cur; });
+    btns.forEach(function (b, i) {
+      b.classList.toggle('here', i === cur);
+      b.classList.toggle('done', answered(i));
+    });
+    prev.disabled = cur === 0;
+    var last = cur === qs.length - 1;
+    next.hidden = last; fin.hidden = !last;
+  }
+  btns.forEach(function (b) { b.addEventListener('click', function () { cur = +b.dataset.i; refresh(); }); });
+  prev.addEventListener('click', function () { if (cur > 0) { cur--; refresh(); } });
+  next.addEventListener('click', function () { if (cur < qs.length - 1) { cur++; refresh(); } });
+  form.addEventListener('change', refresh);
+  document.querySelectorAll('.clear').forEach(function (b) {
+    b.addEventListener('click', function () {
+      b.closest('fieldset').querySelectorAll('input').forEach(function (r) { r.checked = false; });
+      refresh();
+    });
+  });
+
+  // confirm before a manual submit
+  form.addEventListener('submit', function (e) {
+    if (submitting) return;
+    var left = qs.filter(function (_, i) { return !answered(i); }).length;
+    var msg = left ? left + ' question(s) are not answered. Submit anyway?' : 'Submit your exam now?';
+    if (!confirm(msg)) { e.preventDefault(); fin.disabled = false; }
+  });
+
+  // countdown based on the time left according to the server
+  var end = Date.now() + {{ remaining }} * 1000, timer = document.getElementById('timer');
+  function tick() {
+    var s = Math.max(0, Math.round((end - Date.now()) / 1000));
+    timer.textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    timer.classList.toggle('low', s <= 60);
+    if (s <= 0 && !submitting) { submitting = true; form.submit(); return; }
+    setTimeout(tick, 500);
+  }
+  tick(); refresh();
+})();
+</script>
+{% endblock %}

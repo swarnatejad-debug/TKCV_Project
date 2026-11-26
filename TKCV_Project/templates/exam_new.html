@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}New exam{% endblock %}
+{% block content %}
+<section class="auth" style="max-width:560px">
+  <form class="card stack" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <h2>New exam</h2>
+    <label>Exam title<input name="title" required maxlength="200" placeholder="e.g. Programming in C, Unit 1" value="{{ form.get('title','') }}"></label>
+    <label>Subject code (students type this to join)<input name="subject_code" required maxlength="20" placeholder="e.g. BPOPS103" value="{{ form.get('subject_code','') }}"></label>
+    <div class="two">
+      <label>Marks per question (1-5)<input type="number" name="marks" min="1" max="5" required value="{{ form.get('marks', 1) }}"></label>
+      <label>Time limit in minutes<input type="number" name="minutes" min="5" max="180" required value="{{ form.get('minutes', 30) }}"></label>
+    </div>
+    <label>Paste questions now (optional)
+      <textarea name="manual" rows="8" placeholder="Q: What is the size of int in C?&#10;A) 1 byte&#10;B) 2 or 4 bytes&#10;C) 8 bytes&#10;D) 16 bytes&#10;Answer: B&#10;&#10;Q: Next question...">{{ form.get('manual','') }}</textarea></label>
+    <p class="sub" style="margin:0">Leave the box empty to add questions one by one on the next page.</p>
+    <button class="btn" type="submit">Create exam</button>
+  </form>
+</section>
+{% endblock %}
